@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <nav>
+        <div class="hover-container">
+            <button class="howToButton" onclick="location.href='howTo.html'">How to Play</button>
+            <img src="website_info/example.png" alt="game example" height="225" width="150">
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="nameInput">
+            <h1>Speed Game</h1>
+            <p>Click all the objects you can</p>
+            <label for="playerName"> Enter your name: </label>
+            <input type="text" id="playerName"><br><br>
+            <label for="gameTime">Set game timer: </label>
+            <select id="gameTime">
+                <option value="10">10 seconds</option>
+                <option value="20">20 seconds</option>
+                <option value="30">30 seconds</option>
+                <option value="40">40 seconds</option>
+                <option value="50">50 seconds</option>
+                <option value="60">60 seconds</option>
+            </select>
+            <br>
+            <br><button class="start" id="startGame">Start Game</button>
+        </div>
+        <div id="volumeSettings" style="position: relative; top: 0; right: 0; transform: scale(1);">
+                <label for="volumeControl">🔊</label>
+                <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="1">
+        </div>
+    </div>
+
+    <div id="game" style="display: none;">
+        
+        <div id="buttonContainer">
+            <button class="play" id="clickButton">
+                <img src="assets/burger.png" alt="Point" id="pointImage" />
+            </button>
+            <button class="play deduct" id="deductButton">
+                <img src="assets/danger.png" alt="Deduct" id="deductImage" />
+            </button>
+        </div>
+        <p>Score: <span id="score">0</span></p>
+        <p>Time left: <span id="timeLeft">10</span></p>
+    </div>
+
+    <div id="leaderboard" style="display: none;">
+        <h2>Leaderboard</h2>
+        <label for="timeIntervalSelect">Time:</label>
+        <select id="timeIntervalSelect"></select>
+        <div class="leaderboard-container">
+            <ol id="scoreList"></ol>
+        </div>
+        <div style="margin-top: 20px;">
+            <button id="playAgainButton" style="display: none;">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Add audio elements for sound effects -->
+    <audio id="dingSound" src="audio/point.mp3" preload="auto"></audio>
+    <audio id="bzztSound" src="audio/deduct.mp3" preload="auto"></audio>
+
+    <script src="game.js"></script>
+</body>
+</html>
