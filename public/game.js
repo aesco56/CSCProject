@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3001/api"; // Update with your server URL
+const database = firebase.database(); // Initialize Firebase database
 
 let score=0;
 let timer;
@@ -19,6 +19,20 @@ const volumeControl = document.getElementById("volumeControl");
 let highScore = [];
 let currentPointImage = "";
 
+// Array of usable images for game buttons
+const images = [
+    "imgs/burger.png",
+    "imgs/dinosaur.png",
+    "imgs/cat.png",
+    "imgs/lizard.png",
+    "imgs/clover.png",
+    "imgs/purple_eye.png",
+    "imgs/man.png",
+    "imgs/woman.png",
+    "imgs/dog.png",
+    "imgs/rat.png"
+];
+
 document.getElementById("game").style.display = "none";
 
 const pointSound = new Audio("audio/point.mp3");
@@ -34,6 +48,27 @@ volumeControl.addEventListener("input", () => {
 // Set initial volume
 pointSound.volume = volumeControl.value;
 deductSound.volume = volumeControl.value;
+
+const timeIntervalSelect = document.getElementById("timeIntervalSelect");
+if (timeIntervalSelect) {
+    // Populate dropdown
+    const gameTimeOptions = document.getElementById("gameTime").options;
+    for (let i = 0; i < gameTimeOptions.length; i++) {
+        const option = new Option(gameTimeOptions[i].text, gameTimeOptions[i].value);
+        timeIntervalSelect.add(option);
+    }
+    
+    // Set initial value
+    timeIntervalSelect.value = gameTimeInput.value;
+    
+    // Add event listener
+    timeIntervalSelect.addEventListener('change', function() {
+        displayScoresForInterval(parseInt(this.value, 10));
+    });
+    
+    // Initial load
+    displayScoresForInterval(parseInt(gameTimeInput.value, 10));
+}
 
 function createButton(isDeductButton = false) {
     const buttonContainer = document.getElementById("buttonContainer");
@@ -92,111 +127,79 @@ function createButton(isDeductButton = false) {
 }
 
 function generateButtons() {
-    // Randomly generate the number of buttons
-    const buttonCount = Math.floor(Math.random() * 3) + 1; // Between 1 and 3 buttons
+    // Increase the number of buttons generated
+    const buttonCount = Math.floor(Math.random() * 4) + 3;
     for (let i = 0; i < buttonCount; i++) {
-        const isDeductButton = Math.random() < 0.5; // 50% chance to be a deduct button
+        const isDeductButton = Math.random() < 0.6;
         createButton(isDeductButton);
     }
 }
 
-/*
-function updateLeaderboard() {
-    // Sort the scores in descending order
-    highScore.sort((a, b) => b.score - a.score);
-
-    // Group scores by game time intervals
-    const groupedScores = {};
-    highScore.forEach((entry) => {
-        const timeInterval = `${entry.time} seconds`; // Use the game time as the grouping key
-        if (!groupedScores[timeInterval]) {
-            groupedScores[timeInterval] = [];
-        }
-        groupedScores[timeInterval].push(entry);
-    });
-
-    // Populate the dropdown with time intervals
-    const timeIntervalSelect = document.getElementById("timeIntervalSelect");
-    timeIntervalSelect.innerHTML = ""; // Clear existing options
-    for (const timeInterval in groupedScores) {
-        const option = document.createElement("option");
-        option.value = timeInterval;
-        option.textContent = timeInterval;
-        timeIntervalSelect.appendChild(option);
-    }
-
-    // Display scores for the selected time interval
-    timeIntervalSelect.addEventListener("change", () => {
-        displayScoresForInterval(groupedScores, timeIntervalSelect.value);
-    });
-
-    // Automatically display scores for the first time interval
-    if (timeIntervalSelect.options.length > 0) {
-        timeIntervalSelect.value = timeIntervalSelect.options[0].value;
-        displayScoresForInterval(groupedScores, timeIntervalSelect.value);
-    }
-}
-*/
-
 async function updateLeaderboard() {
-    try {
-        const gameTime = parseInt(gameTimeInput.value, 10);
-        const response = await fetch(`${API_BASE_URL}/scores/${gameTime}`);
-        const scores = await response.json();
+    const timeIntervalSelect = document.getElementById("timeIntervalSelect");
+    const gameTime = timeIntervalSelect ? parseInt(timeIntervalSelect.value, 10) : parseInt(gameTimeInput.value, 10);
 
-        const scoreList = document.getElementById("scoreList");
-        scoreList.innerHTML = ""; // Clear existing scores
+    try{
+        const scoresRef = firebase.database().ref('scores').orderByChild('time').equalTo(gameTime).limitToLast(10);
+        scoresRef.on('value', (snapshot) => {
+            const scores = [];
+            snapshot.forEach((child) => {
+                scores.push({id: child.key, ...child.val() });
+            });
 
-        if (scores.length > 0) {
-            scores.forEach((entry, index) => {
-                const listItem = document.createElement("li");
-                listItem.className = "score-item";
-                listItem.onclick = function() {toggleScore(this); };
+            scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+            const scoreList = document.getElementById("scoreList");
+            scoreList.innerHTML = ""; // Clear existing scores
 
+            if (scores.length > 0) {
+                scores.forEach((entry, index) => {
+                    const listItem = document.createElement("li");
+                    listItem.className = "score-item";
+                    listItem.onclick = function() {toggleScore(this); };
+
+                    listItem.innerHTML = `
+                        <div class="score-content">${index + 1}. ${entry.name} - ${entry.score}</div>
+                        ${entry.message ? `<div class="score-message">"${entry.message}"</div>` : '<div class="score-message">No message</div>'}
+                    `;
+                    scoreList.appendChild(listItem);
+                });
+            } else {
+                scoreList.innerHTML = "<li>No scores available for this time interval.</li>";
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching scores:", error);
+        alert("An error occurred while fetching scores. Please try again later.");
+
+        if (highScore.length > 0) {
+            const scoreList = document.getElementById('scoreList');
+            scoreList.innerHTML = '';
+            highScore.forEach((entry, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'score-item';
+                listItem.onclick = function() { toggleScore(this); };
                 listItem.innerHTML = `
                     <div class="score-content">${index + 1}. ${entry.name} - ${entry.score}</div>
                     ${entry.message ? `<div class="score-message">"${entry.message}"</div>` : '<div class="score-message">No message</div>'}
                 `;
                 scoreList.appendChild(listItem);
             });
-        } else {
-            scoreList.innerHTML = "<li>No scores available for this time interval.</li>";
         }
-
-        const timeIntervalSelect = document.getElementById("timeIntervalSelect");
-        timeIntervalSelect.innerHTML = ""; // Clear existing options
-
-        const option = document.createElement("option");
-        option.value = `${gameTime} seconds`;
-        option.textContent = `${gameTime} seconds`;
-        timeIntervalSelect.appendChild(option);
-    } catch (error) {
-        console.error("Error fetching scores:", error);
-        
-        highScore.sort((a, b) => b.score - a.score);
-        const scoreList = document.getElementById("scoreList");
-        scoreList.innerHTML = ""; // Clear existing scores
-
-        highScore.forEach((entry, index) => {
-            const listItem = document.createElement("li");
-            listItem.className = "score-item";
-            listItem.onclick = function() {toggleScore(this); };
-
-            listItem.innerHTML = `
-                <div class="score-content">${index + 1}. ${entry.name} - ${entry.score}</div>
-                ${entry.message ? `<div class="score-message">"${entry.message}"</div>` : '<div class="score-message">No message</div>'}
-            `;
-            scoreList.appendChild(listItem);
-        });
     }
 }
 
-function displayScoresForInterval(groupedScores, timeInterval) {
-    const scoreList = document.getElementById("scoreList");
-    scoreList.innerHTML = ""; // Clear existing scores
+function displayScoresForInterval(gameTime) {
+    firebase.database().ref('scores').orderByChild('time').equalTo(gameTime).limitToLast(10).once('value', (snapshot) => {
+        const scores = [];
+        snapshot.forEach(child => {
+            scores.push(child.val());
+        });
 
-    if (groupedScores[timeInterval]) {
-        groupedScores[timeInterval].forEach((entry, index) => {
+        scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+        const scoreList = document.getElementById("scoreList");
+        scoreList.innerHTML = ""; // Clear existing scores
+
+        scores.forEach((entry, index) => {
             const listItem = document.createElement("li");
             listItem.className = "score-item";
             listItem.onclick = function() {toggleScore(this); };
@@ -206,8 +209,11 @@ function displayScoresForInterval(groupedScores, timeInterval) {
                 ${entry.message ? `<div class="score-message">"${entry.message}"</div>` : '<div class="score-message">No message</div>'}
             `;
             scoreList.appendChild(listItem);
-        });
-    }
+
+
+        }); 
+    });
+
 }
 
 function toggleScore(element) {
@@ -222,121 +228,87 @@ function toggleScore(element) {
     element.classList.toggle('active');
 }
 
-/*
-function endGame(playerName) {
-    clickButton.disabled = true;
-
-    // Hide all other sections
-    document.getElementById("game").style.display = "none";
-    nameInput.style.display = "none";
-
-    // Remove the container element
-    const container = document.querySelector(".container");
-    if (container) {
-        container.style.display = "none"; // Hide the container
-    }
-
-    const minScore = highScore.length < 10 ? 0 : highScore[highScore.length - 1].score;
-    let message = "";
-    if (score > minScore) {
-        const maxLength = 100; // Maximum length for the message
-        message = prompt(`Congratulations! You made it to the leaderboard. Write a message (max ${maxLength} characters):`);
-
-        while (message && message.length > maxLength) {
-            message = prompt(`Message too long! Please limit to ${maxLength} characters:`);
-        }
-
-        if (message && message.length > maxLength) {
-            message = message.substring(0, maxLength) + "..."; // Truncate the message if it exceeds the limit
-        }
-    }
-
-    // Add the player's score, message, and game time to the leaderboard
-    const gameTime = parseInt(gameTimeInput.value, 10);
-    highScore.push({ name: playerName, score, message, time: gameTime });
-
-    // Update the leaderboard
-    updateLeaderboard();
-
-    // Automatically display the scoreboard for the current time interval
-    const timeIntervalSelect = document.getElementById("timeIntervalSelect");
-    const currentInterval = `${gameTime} seconds`;
-    if (timeIntervalSelect) {
-        timeIntervalSelect.value = currentInterval;
-        displayScoresForInterval(
-            highScore.reduce((groupedScores, entry) => {
-                const timeKey = `${entry.time} seconds`;
-                if (!groupedScores[timeKey]) groupedScores[timeKey] = [];
-                groupedScores[timeKey].push(entry);
-                return groupedScores;
-            }, {}),
-            currentInterval
-        );
-    }
-
-    // Show the leaderboard and play again button
-    leaderboard.style.display = "block";
-    playAgainButton.style.display = "block";
-}
-*/
-
 async function endGame(playerName) {
     clickButton.disabled = true;
 
     document.getElementById("game").style.display = "none";
     nameInput.style.display = "none";
-
     const container = document.querySelector(".container");
-    if (container) {
-        container.style.display = "none"; // Hide the container
-    }
+    if (container) container.style.display = "none";
 
     const gameTime = parseInt(gameTimeInput.value, 10);
     let message = "";
-    try{
-        const response = await fetch(`${API_BASE_URL}/scores/${gameTime}`);
-        const scores = await response.json();
 
-        const minScore = scores.length < 10 ? 0 : scores[scores.length - 1].score;
-        if (score > minScore) {
-            const maxLength = 100; // Maximum length for the message
-            message = prompt(`Congratulations! You made it to the leaderboard. Write a message (max ${maxLength} characters):`);
+    try {
+        const LEADERBOARD_SIZE = 10;
+        const scoresRef = firebase.database().ref('scores').orderByChild('time').equalTo(gameTime);
 
+        const scoresSnapshot = await scoresRef.once('value');
+
+        let scores = [];
+        scoresSnapshot.forEach(child => {
+            scores.push({id: child.key, ...child.val()});
+        });
+
+        scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+
+        
+        const isQualified = scores.length < LEADERBOARD_SIZE || score > scores[scores.length - 1].score;
+
+        if (isQualified) {
+            // Remove lowest score if leaderboard is full
+            if (scores.length >= LEADERBOARD_SIZE) {
+
+                scores.sort((a, b) => b.score - a.score); // Sort scores in ascending order
+
+                const lowestScore = scores[LEADERBOARD_SIZE - 1].score;
+                const lowestEntries = scores.filter(entry => entry.score <= lowestScore).sort((a, b) => a.score - b.score || a.timestamp - b.timestamp);
+                
+                const entryToRemove = lowestEntries.length > (scores.length - LEADERBOARD_SIZE + 1) ? lowestEntries.slice(0,1) : lowestEntries;
+
+                for (const entry of entryToRemove) {
+                    await firebase.database().ref('scores').child(entry.id).remove();
+                }
+            }
+
+            // Always prompt for message when qualifying
+            const maxLength = 100;
+            message = prompt(`Congratulations! You made it to the leaderboard. Write a message (max ${maxLength} chars):`);
+            
             while (message && message.length > maxLength) {
-                message = prompt(`Message too long! Please limit to ${maxLength} characters:`);
+                message = prompt(`Message too long! Please limit to ${maxLength} chars:`);
             }
 
-            if (message && message.length > maxLength) {
-                message = message.substring(0, maxLength) + "..."; // Truncate the message if it exceeds the limit
-            }
-
-            await fetch(`${API_BASE_URL}/scores`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: playerName,
-                    score,
-                    time: gameTime,
-                    message: message || null
-                })
+            // Add new score
+            await firebase.database().ref('scores').push({
+                name: playerName,
+                score: score,
+                time: gameTime,
+                message: message || null,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             });
+
+        } else {
+            alert("Better Luck Next Time!");
         }
 
+        // Update leaderboard display
         await updateLeaderboard();
 
-        leaderboard.style.display = "block";
-        playAgainButton.style.display = "block";
     } catch (error) {
-        console.error("Error fetching scores:", error);
-        alert("An error occurred while fetching scores. Please try again later.");
-
-        highScore.push({ name: playerName, score, message, time: gameTime });
-        updateLeaderboard();
-        leaderboard.style.display = "block";
-        playAgainButton.style.display = "block";
+        console.error("Failed to save score:", error);
+        // Fallback to local storage
+        highScore.push({ 
+            name: playerName, 
+            score, 
+            message, 
+            time: gameTime 
+        });
     }
+
+    // Show leaderboard (keep your existing UI code)
+    leaderboard.style.display = "block";
+    playAgainButton.style.display = "block";
 }
 
 playAgainButton.addEventListener("click", () => {
@@ -411,7 +383,7 @@ function actuallyStartGame(playerName, gameTime) {
     pointImage.src = currentPointImage;
     clickButton.style.backgroundImage = `url(${currentPointImage})`;
 
-    // Periodically generate buttons
+    // Decrease the interval duration for generating buttons
     const buttonInterval = setInterval(generateButtons, 1000);
 
     timer = setInterval(() => {
@@ -426,16 +398,6 @@ function actuallyStartGame(playerName, gameTime) {
     }, 1000);
 }
 
-// Array of usable images for game buttons
-const images = [
-    "imgs/burger.png",
-    "imgs/dinosaur.png",
-    "imgs/cat.png",
-    "imgs/lizard.png",
-    "imgs/clover.png",
-    "imgs/purple_eye.png"
-];
-
 clickButton.addEventListener("click", () => {
     score++;
     scoreDisplay.textContent = score;
@@ -443,7 +405,7 @@ clickButton.addEventListener("click", () => {
     clickButton.style.backgroundImage = `url(${currentPointImage})`; // Set the button background
     clickButton.style.backgroundSize = "cover"; // Ensure the image covers the button
     const pointImage = document.getElementById("pointImage");
-    pointImage.src = randomImage; // Set the same image for the child
+    pointImage.src = currentPointImage; // Set the same image for the child
 
     // Move the button to a random position within the buttonContainer
     const buttonContainer = document.getElementById("buttonContainer");

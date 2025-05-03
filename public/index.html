@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project</title>
+    <title>Speed Game</title>
+
+    <link rel="icon" href="website_info/icons8-cursor-material-rounded-16.png" type="image/x-icon">
+    <link rel="apple-touch-icon" href="website_info/icons8-cursor-material-rounded-16.png">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script type="module">
+        import { firebaseConfig } from './config.js';
+        firebase.initializeApp(firebaseConfig);
+        window.firebase = firebase;
+    </script>
+
     <link rel="stylesheet" href="style.css">
 
 </head>
@@ -43,10 +56,10 @@
         
         <div id="buttonContainer">
             <button class="play" id="clickButton">
-                <img src="assets/burger.png" alt="Point" id="pointImage" />
+                <img src="imgs/burger.png" alt="Point" id="pointImage" />
             </button>
             <button class="play deduct" id="deductButton">
-                <img src="assets/danger.png" alt="Deduct" id="deductImage" />
+                <img src="imgs/dinosaur.png" alt="Deduct" id="deductImage" />
             </button>
         </div>
         <p>Score: <span id="score">0</span></p>
@@ -69,6 +82,7 @@
     <audio id="dingSound" src="audio/point.mp3" preload="auto"></audio>
     <audio id="bzztSound" src="audio/deduct.mp3" preload="auto"></audio>
 
-    <script src="game.js"></script>
+    <script type="module" src="game.js"></script>
+
 </body>
 </html>

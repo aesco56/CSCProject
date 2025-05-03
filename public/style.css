@@ -132,6 +132,7 @@ h1{
 ol {
     padding-left: 0;
     list-style-type: none;
+    width: -webkit-fill-available;
     font-size: 20px;
 }
 
@@ -244,7 +245,7 @@ header, nav {
     display: grid;
     border-radius: 15px;
     background-color: #fff;
-    padding: 50px;
+    padding: 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
