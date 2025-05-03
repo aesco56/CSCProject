@@ -1,5 +1,16 @@
 {
+  "name": "speed-game",
+  "version": "1.0.0",
+  "description": "A fun reaction-based point-and-click game.",
+  "main": "public/game.js",
+  "scripts": {
+    "start": "firebase serve",
+    "deploy": "firebase deploy"
+  },
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "dotenv": "^16.5.0"
-  }
+    "firebase": "^10.7.1"
+  },
+  "devDependencies": {}
 }
