@@ -45,28 +45,23 @@ volumeControl.addEventListener("input", () => {
     deductSound.volume = volume;
 });
 
-// Set initial volume
 pointSound.volume = volumeControl.value;
 deductSound.volume = volumeControl.value;
 
 const timeIntervalSelect = document.getElementById("timeIntervalSelect");
 if (timeIntervalSelect) {
-    // Populate dropdown
     const gameTimeOptions = document.getElementById("gameTime").options;
     for (let i = 0; i < gameTimeOptions.length; i++) {
         const option = new Option(gameTimeOptions[i].text, gameTimeOptions[i].value);
         timeIntervalSelect.add(option);
     }
     
-    // Set initial value
     timeIntervalSelect.value = gameTimeInput.value;
     
-    // Add event listener
     timeIntervalSelect.addEventListener('change', function() {
         displayScoresForInterval(parseInt(this.value, 10));
     });
     
-    // Initial load
     displayScoresForInterval(parseInt(gameTimeInput.value, 10));
 }
 
@@ -102,16 +97,15 @@ function createButton(isDeductButton = false) {
     // Add the button to the container
     buttonContainer.appendChild(button);
 
-    // Add click event listener
     button.addEventListener("click", () => {
         if (isDeductButton) {
             score--;
-            deductSound.currentTime = 0; // Reset playback position
-            deductSound.play(); // Play "bzzt" sound
+            deductSound.currentTime = 0;
+            deductSound.play();
         } else {
             score++;
-            pointSound.currentTime = 0; // Reset playback position
-            pointSound.play(); // Play "ding" sound
+            pointSound.currentTime = 0;
+            pointSound.play();
         }
         scoreDisplay.textContent = score;
         buttonContainer.removeChild(button);
@@ -130,6 +124,8 @@ function generateButtons() {
     // Increase the number of buttons generated
     const buttonCount = Math.floor(Math.random() * 4) + 3;
     for (let i = 0; i < buttonCount; i++) {
+        // Randomly decide whether to create a deduct button or a point button
+        // 60% chance for point button, 40% for deduct button
         const isDeductButton = Math.random() < 0.6;
         createButton(isDeductButton);
     }
@@ -147,9 +143,9 @@ async function updateLeaderboard() {
                 scores.push({id: child.key, ...child.val() });
             });
 
-            scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+            scores.sort((a, b) => b.score - a.score);
             const scoreList = document.getElementById("scoreList");
-            scoreList.innerHTML = ""; // Clear existing scores
+            scoreList.innerHTML = "";
 
             if (scores.length > 0) {
                 scores.forEach((entry, index) => {
@@ -195,9 +191,14 @@ function displayScoresForInterval(gameTime) {
             scores.push(child.val());
         });
 
-        scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+        scores.sort((a, b) => b.score - a.score);
         const scoreList = document.getElementById("scoreList");
-        scoreList.innerHTML = ""; // Clear existing scores
+        scoreList.innerHTML = "";
+
+        if (scores.length === 0) {
+            scoreList.innerHTML = "<li>No scores available for this time interval.</li>";
+            return;
+        }
 
         scores.forEach((entry, index) => {
             const listItem = document.createElement("li");
@@ -217,14 +218,12 @@ function displayScoresForInterval(gameTime) {
 }
 
 function toggleScore(element) {
-    // Close all other active items first
     document.querySelectorAll('.score-item.active').forEach(item => {
         if (item !== element) {
             item.classList.remove('active');
         }
     });
     
-    // Toggle current item
     element.classList.toggle('active');
 }
 
@@ -250,16 +249,15 @@ async function endGame(playerName) {
             scores.push({id: child.key, ...child.val()});
         });
 
-        scores.sort((a, b) => b.score - a.score); // Sort scores in descending order
+        scores.sort((a, b) => b.score - a.score);
 
         
         const isQualified = scores.length < LEADERBOARD_SIZE || score > scores[scores.length - 1].score;
 
         if (isQualified) {
-            // Remove lowest score if leaderboard is full
             if (scores.length >= LEADERBOARD_SIZE) {
 
-                scores.sort((a, b) => b.score - a.score); // Sort scores in ascending order
+                scores.sort((a, b) => b.score - a.score);
 
                 const lowestScore = scores[LEADERBOARD_SIZE - 1].score;
                 const lowestEntries = scores.filter(entry => entry.score <= lowestScore).sort((a, b) => a.score - b.score || a.timestamp - b.timestamp);
@@ -271,7 +269,6 @@ async function endGame(playerName) {
                 }
             }
 
-            // Always prompt for message when qualifying
             const maxLength = 100;
             message = prompt(`Congratulations! You made it to the leaderboard. Write a message (max ${maxLength} chars):`);
             
@@ -292,12 +289,10 @@ async function endGame(playerName) {
             alert("Better Luck Next Time!");
         }
 
-        // Update leaderboard display
         await updateLeaderboard();
 
     } catch (error) {
         console.error("Failed to save score:", error);
-        // Fallback to local storage
         highScore.push({ 
             name: playerName, 
             score, 
@@ -306,18 +301,15 @@ async function endGame(playerName) {
         });
     }
 
-    // Show leaderboard (keep your existing UI code)
     leaderboard.style.display = "block";
     playAgainButton.style.display = "block";
 }
 
 playAgainButton.addEventListener("click", () => {
 
-    // Remove the leaderboard and Play Again Button
     leaderboard.style.display = "none";
     playAgainButton.style.display = "none";
 
-    // Displays name entry container again
     nameInput.style.display = "block";
 
     const container = document.querySelector(".container");
@@ -325,13 +317,11 @@ playAgainButton.addEventListener("click", () => {
         container.style.display = "grid";
     }
 
-    // Reset score and time
     score = 0;
     timeLeft = parseInt(gameTimeInput.value, 10);
     scoreDisplay.textContent = score;
     timeLeftDisplay.textContent = timeLeft;
 
-    // Enable the button for the next game
     clickButton.disabled = false;
 });
 
@@ -364,7 +354,7 @@ startGameButton.addEventListener("click", () => {
     });
 
     function getImageName(path) {
-        const fileName = path.split("/").pop(); // Extract the image name from the path
+        const fileName = path.split("/").pop();
         return fileName.split('.')[0].replace(/_/g, ' ');
     }
 });
@@ -398,45 +388,24 @@ function actuallyStartGame(playerName, gameTime) {
     }, 1000);
 }
 
+function moveButtonRandomly(button) {
+    const container = document.getElementById("buttonContainer");
+    const maxX = container.offsetWidth - button.offsetWidth;
+    const maxY = container.offsetHeight - button.offsetHeight;
+    
+    button.style.position = "absolute";
+    button.style.left = `${Math.floor(Math.random() * maxX)}px`;
+    button.style.top = `${Math.floor(Math.random() * maxY)}px`;
+}
+
 clickButton.addEventListener("click", () => {
     score++;
     scoreDisplay.textContent = score;
-
-    clickButton.style.backgroundImage = `url(${currentPointImage})`; // Set the button background
-    clickButton.style.backgroundSize = "cover"; // Ensure the image covers the button
-    const pointImage = document.getElementById("pointImage");
-    pointImage.src = currentPointImage; // Set the same image for the child
-
-    // Move the button to a random position within the buttonContainer
-    const buttonContainer = document.getElementById("buttonContainer");
-    const maxX = buttonContainer.offsetWidth - clickButton.offsetWidth;
-    const maxY = buttonContainer.offsetHeight - clickButton.offsetHeight;
-
-    const randomX = Math.floor(Math.random() * maxX);
-    const randomY = Math.floor(Math.random() * maxY);
-
-    clickButton.style.position = "absolute";
-    clickButton.style.left = `${randomX}px`;
-    clickButton.style.top = `${randomY}px`;
+    moveButtonRandomly(clickButton);
 });
 
 deductButton.addEventListener("click", () => {
     score--;
     scoreDisplay.textContent = score;
-
-    // Move the deduct button to a random position within the buttonContainer
-    const buttonContainer = document.getElementById("buttonContainer");
-    const maxX = buttonContainer.offsetWidth - deductButton.offsetWidth;
-    const maxY = buttonContainer.offsetHeight - deductButton.offsetHeight;
-
-    const randomX = Math.floor(Math.random() * maxX);
-    const randomY = Math.floor(Math.random() * maxY);
-
-    deductButton.style.position = "absolute";
-    deductButton.style.left = `${randomX}px`;
-    deductButton.style.top = `${randomY}px`;
-
-    // Update the deduct button image to a random one
-    const deductImage = document.getElementById("deductImage");
-    deductImage.src = images[Math.floor(Math.random() * images.length)];
+    moveButtonRandomly(deductButton);
 });
