@@ -94,7 +94,6 @@ function createButton(isDeductButton = false) {
     img.style.pointerEvents = "none";
     button.appendChild(img);
 
-    // Add the button to the container
     buttonContainer.appendChild(button);
 
     button.addEventListener("click", () => {
@@ -238,6 +237,13 @@ async function endGame(playerName) {
     const gameTime = parseInt(gameTimeInput.value, 10);
     let message = "";
 
+    if (score <= 0) {
+        alert("You must have a score greater than 0 to be on the leaderboard!");
+        leaderboard.style.display = "block";
+        playAgainButton.style.display = "block";
+        return;
+    }
+
     try {
         const LEADERBOARD_SIZE = 10;
         const scoresRef = firebase.database().ref('scores').orderByChild('time').equalTo(gameTime);
@@ -276,7 +282,7 @@ async function endGame(playerName) {
                 message = prompt(`Message too long! Please limit to ${maxLength} chars:`);
             }
 
-            // Add new score
+            
             await firebase.database().ref('scores').push({
                 name: playerName,
                 score: score,
@@ -349,8 +355,8 @@ startGameButton.addEventListener("click", () => {
     document.body.appendChild(startPrompt);
 
     document.getElementById("startGameBtn").addEventListener("click", () => {
-        document.body.removeChild(startPrompt); // Remove the prompt
-        actuallyStartGame(playerName, gameTime); // Start the game
+        document.body.removeChild(startPrompt);
+        actuallyStartGame(playerName, gameTime);
     });
 
     function getImageName(path) {
