@@ -388,24 +388,12 @@ function actuallyStartGame(playerName, gameTime) {
     }, 1000);
 }
 
-function moveButtonRandomly(button) {
-    const container = document.getElementById("buttonContainer");
-    const maxX = container.offsetWidth - button.offsetWidth;
-    const maxY = container.offsetHeight - button.offsetHeight;
-    
-    button.style.position = "absolute";
-    button.style.left = `${Math.floor(Math.random() * maxX)}px`;
-    button.style.top = `${Math.floor(Math.random() * maxY)}px`;
-}
-
 clickButton.addEventListener("click", () => {
     score++;
     scoreDisplay.textContent = score;
-    moveButtonRandomly(clickButton);
 });
 
 deductButton.addEventListener("click", () => {
     score--;
     scoreDisplay.textContent = score;
-    moveButtonRandomly(deductButton);
 });
