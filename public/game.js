@@ -379,7 +379,7 @@ function actuallyStartGame(playerName, gameTime) {
     pointImage.src = currentPointImage;
     clickButton.style.backgroundImage = `url(${currentPointImage})`;
 
-    // Decrease the interval duration for generating buttons
+    // The interval duration for generating buttons
     const buttonInterval = setInterval(generateButtons, 1000);
 
     timer = setInterval(() => {
@@ -394,6 +394,7 @@ function actuallyStartGame(playerName, gameTime) {
     }, 1000);
 }
 
+/*
 clickButton.addEventListener("click", () => {
     score++;
     scoreDisplay.textContent = score;
@@ -403,3 +404,4 @@ deductButton.addEventListener("click", () => {
     score--;
     scoreDisplay.textContent = score;
 });
+*/
