@@ -393,15 +393,3 @@ function actuallyStartGame(playerName, gameTime) {
         }
     }, 1000);
 }
-
-/*
-clickButton.addEventListener("click", () => {
-    score++;
-    scoreDisplay.textContent = score;
-});
-
-deductButton.addEventListener("click", () => {
-    score--;
-    scoreDisplay.textContent = score;
-});
-*/
